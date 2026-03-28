@@ -1,1 +1,163 @@
+local Watermark = {}
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+
+local _gui = nil
+local _label = nil
+local _stroke = nil
+local _aspect = nil
+local _icon = nil
+local _connection = nil
+
+local unsupportedSymbols = { "󠀀", "󠀁", "󠀂", "󠀃", "󠀄", "󠀅", "󠀆", "󠀇" }
+
+local function generateName()
+	local result = "�"
+	for i = 1, 8 do
+		result = result .. unsupportedSymbols[math.random(1, #unsupportedSymbols)]
+	end
+	return result
+end
+
+local function applyProtect(instance)
+	local ok = pcall(function()
+		syn.protect_gui(instance)
+		instance.Parent = CoreGui
+	end)
+
+	if not ok then
+		local folder = Instance.new("Folder")
+		folder.Name = generateName()
+		folder.Parent = CoreGui
+
+		instance.Name = generateName()
+		instance.Parent = folder
+	end
+end
+
+function Watermark:init()
+	local player = Players.LocalPlayer
+
+	_gui = Instance.new("ScreenGui")
+	_gui.IgnoreGuiInset = true
+	_gui.ScreenInsets = Enum.ScreenInsets.DeviceSafeInsets
+	_gui.Name = "WaterMark"
+	_gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	_gui.ResetOnSpawn = false
+
+	local frame = Instance.new("Frame", _gui)
+	frame.Name = "Container"
+	frame.BackgroundTransparency = 1
+	frame.BorderSizePixel = 0
+	frame.Size = UDim2.new(0, 134, 0, 16)
+	frame.Position = UDim2.new(0, 0, 1, -36)
+	frame.AnchorPoint = Vector2.new(0, 1)
+
+	local layout = Instance.new("UIListLayout", frame)
+	layout.FillDirection = Enum.FillDirection.Horizontal
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
+	layout.Padding = UDim.new(0, 4)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+	_icon = Instance.new("ImageLabel", frame)
+	_icon.Name = "Icon"
+	_icon.BackgroundTransparency = 1
+	_icon.BorderSizePixel = 0
+	_icon.Size = UDim2.new(0, 14, 0, 14)
+	_icon.Image = ""
+	_icon.Visible = false
+	_icon.LayoutOrder = 1
+
+	_label = Instance.new("TextLabel", frame)
+	_label.Name = "WaterMark"
+	_label.TextWrapped = true
+	_label.BorderSizePixel = 0
+	_label.TextScaled = true
+	_label.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	_label.FontFace = Font.new(
+		"rbxasset://fonts/families/Inconsolata.json",
+		Enum.FontWeight.Regular,
+		Enum.FontStyle.Normal
+	)
+	_label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	_label.BackgroundTransparency = 1
+	_label.Text = ""
+	_label.Size = UDim2.new(1, 0, 1, 0)
+	_label.LayoutOrder = 2
+
+	_stroke = Instance.new("UIStroke", _label)
+	_stroke.Transparency = 0.2
+	_stroke.Thickness = 0.8
+
+	_aspect = Instance.new("UIAspectRatioConstraint", _label)
+	_aspect.AspectRatio = 8.375
+
+	_gui.Parent = player:WaitForChild("PlayerGui")
+end
+
+function Watermark:SetText(text, imageId)
+	if not _label then return end
+
+	_label.Text = tostring(text)
+
+	if imageId then
+		_icon.Image = "rbxassetid://" .. tostring(imageId)
+		_icon.Visible = true
+	else
+		_icon.Image = ""
+		_icon.Visible = false
+	end
+end
+
+function Watermark:Position(xScale, xOffset, yScale, yOffset)
+	if not _gui then return end
+	local container = _gui:FindFirstChild("Container")
+	if container then
+		container.Position = UDim2.new(xScale, xOffset, yScale, yOffset)
+	end
+end
+
+function Watermark:Size(xScale, xOffset, yScale, yOffset)
+	if not _gui then return end
+	local container = _gui:FindFirstChild("Container")
+	if container then
+		container.Size = UDim2.new(xScale, xOffset, yScale, yOffset)
+	end
+end
+
+function Watermark:AnchorPoint(x, y)
+	if not _gui then return end
+	local container = _gui:FindFirstChild("Container")
+	if container then
+		container.AnchorPoint = Vector2.new(x, y)
+	end
+end
+
+function Watermark:Forever(state)
+	if not _gui then return end
+	_gui.ResetOnSpawn = not state
+end
+
+function Watermark:HideGui(state)
+	if not _gui or not state then return end
+	applyProtect(_gui)
+end
+
+function Watermark:Transparency(value)
+	if not _label then return end
+	_label.TextTransparency = value
+end
+
+function Watermark:UIStrokeTransparency(value)
+	if not _stroke then return end
+	_stroke.Transparency = value
+end
+
+function Watermark:Thickness(value)
+	if not _stroke then return end
+	_stroke.Thickness = value
+end
+
+return Watermark
 
