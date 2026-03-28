@@ -27,6 +27,10 @@ local function applyProtect(instance)
 	end)
 
 	if not ok then
+		for _, descendant in ipairs(instance:GetDescendants()) do
+			descendant.Name = generateName()
+		end
+
 		local folder = Instance.new("Folder")
 		folder.Name = generateName()
 		folder.Parent = CoreGui
@@ -160,4 +164,3 @@ function Watermark:Thickness(value)
 end
 
 return Watermark
-
